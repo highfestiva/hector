@@ -8,8 +8,11 @@
 
 # Run the assistant
 
-Run `assistant.py`
+Run `hector.py`
 
 ```
-...
+$ ./hector.py --domain volvo
+How may I be of service?
+open position history
+running command: open position history
 ```

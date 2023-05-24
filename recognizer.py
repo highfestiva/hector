@@ -6,7 +6,7 @@ import logging
 from random import choice
 
 
-cmd_filename = 'cmds/generic.json'
+cmd_filename = 'cmds/generic-cmds.json'
 logger = logging.getLogger(__name__)
 openai.api_key = os.getenv('OPENAI_API_KEY')
 

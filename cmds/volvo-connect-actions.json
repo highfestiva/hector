@@ -1,0 +1,11 @@
+{
+  "start": {
+    "login_url": "https://iot1.volvoconnect.com/login",
+    "username": "input[id='username']:abc",
+    "password": "input[id='password']:abc",
+    "submit": "button[name='submit']"
+  },
+  "position_history": {
+    "url": "/positionhistory"
+  }
+}
