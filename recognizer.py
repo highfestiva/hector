@@ -4,9 +4,13 @@ import os
 import openai
 import logging
 from random import choice
+import re
 
 
+meta_filename = 'cmds/meta-cmds.json'
 cmd_filename = 'cmds/generic-cmds.json'
+max_phrase_words = 2
+
 logger = logging.getLogger(__name__)
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -16,19 +20,26 @@ if not openai.api_key:
     os.exit(1)
 
 
+class rdict(dict):
+    pass
+
+
 def load_cmd_tree(filename=None):
     cmd_tree = json.load(open(filename or cmd_filename))
+    cmd_tree = rdict(cmd_tree)
+    cmd_tree.meta = json.load(open(meta_filename))
     return cmd_tree
 
 
 def save_cmd_tree(cmd_tree, filename=None):
-    j = json.dumps(cmd_tree, indent='  ')
-    j = j.replace('\n      ', '').replace('\n    ]', ']')
-    open(filename or cmd_filename, 'wt').write(j)
+    _dump_json_embeddings(cmd_tree, filename or cmd_filename)
+    _dump_json_embeddings(cmd_tree.meta, meta_filename)
 
 
 def filter_unembedded_cmds(cmd_tree):
-    unembedded = [k for kv in cmd_tree.values() for k,v in kv.items() if not v]
+    unembedded = []
+    unembedded += [k for kv in cmd_tree.values() for k,v in kv.items() if not v]
+    unembedded += [k for kv in cmd_tree.meta.values() for k,v in kv.items() if not v]
     return unembedded
 
 
@@ -37,18 +48,50 @@ def update_embeddings(cmd_tree, cmds):
         for kv in cmd_tree.values():
             if cmd in kv:
                 kv[cmd] = embedding
+        for kv in cmd_tree.meta.values():
+            if cmd in kv:
+                kv[cmd] = embedding
 
 
-def embed(cmd):
-    embeddings = _get_embeddings([cmd])
-    return embeddings[0]
+def find_closest_command(cmd_tree, cmd):
+    phrases = _str_to_phrases(cmd, nwords=max_phrase_words)
+    cmd = _strip_exact_meta(cmd_tree.meta['filter_words'].keys(), cmd)
+    phrases = _str_to_phrases(cmd, nwords=max_phrase_words)
+    key,phrase,diff = _phrase_exact_match(cmd_tree, phrases)
+    if diff > 0.97:
+        logger.debug('exact command match %s: %s (%i)', cmd, phrase, diff*100)
+        return key, phrase, diff
 
-
-def find_closest_command(cmd_tree, orig_cmd, cmd_embedding):
-    flat = [{'cmd':c, 'diff':cosine_similarity(e, cmd_embedding), 'key':k} for k,cmds in cmd_tree.items() for c,e in cmds.items()]
+    logger.debug('phrases remaining: %s', phrases)
+    embeddings = _get_embeddings(phrases)
+    flat = [{'cmd':c, 'diff':_cosine_similarity(e, embedding), 'key':k} for embedding in embeddings for k,cmds in cmd_tree.items() for c,e in cmds.items()]
     closest = sorted(flat, key=lambda o: -o['diff'])
-    logger.debug('closest commands to %s: %s', orig_cmd, closest[:3])
+    logger.debug('closest commands to %s: %s', cmd, closest[:3])
     return closest[0]['key'], closest[0]['cmd'], closest[0]['diff']
+
+
+def _strip_exact_meta(phrases, cmd):
+    for phrase in phrases:
+        # logger.debug(f'stripping "{phrase}" from {cmd}')
+        cmd = re.sub(f'\\b{phrase}\\b', '', cmd)
+        cmd = cmd.strip().replace('  ', ' ')
+        # logger.debug(f'cmd = "{cmd}"')
+    return cmd
+
+
+def _phrase_exact_match(cmd_tree, phrases):
+    for phrase in phrases:
+        for k,cmds in cmd_tree.items():
+            for c in cmds:
+                if c == phrase:
+                    return k, c, 1.0
+    return None, None, 0.0
+
+
+def _dump_json_embeddings(tree, filename):
+    j = json.dumps(tree, indent='  ')
+    j = j.replace('\n      ', '').replace('\n    ]', ']')
+    open(filename, 'wt').write(j)
 
 
 def _get_embeddings(list_of_text, engine='text-similarity-babbage-001'):
@@ -59,5 +102,11 @@ def _get_embeddings(list_of_text, engine='text-similarity-babbage-001'):
     return [d['embedding'] for d in data]
 
 
-def cosine_similarity(a, b):
+def _str_to_phrases(cmd, nwords=2):
+    words = cmd.split()
+    phrases = [' '.join(words[i:j]) for i in range(len(words)) for j in range(min(len(words),i+nwords), i, -1)]
+    return sorted(phrases, key=lambda w:-len(w))
+
+
+def _cosine_similarity(a, b):
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))

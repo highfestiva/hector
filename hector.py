@@ -21,7 +21,7 @@ def output(text, *args, **kwargs):
 
 parser = ArgumentParser()
 parser.add_argument('-v','--verbose', action='store_true')
-parser.add_argument('-d','--domain', help='The command domain to use, e.g. volvo-connect')
+parser.add_argument('-d','--domain', required=True, help='The command domain to use, e.g. volvo-connect')
 parser.add_argument('-a','--audio', action='store_true', help='Use speech to control and listen through speakers')
 options = parser.parse_args()
 if options.domain:
@@ -52,12 +52,14 @@ while True:
         cmd = transcribe_from_audio_file(fn)
     else:
         cmd = input().strip()
+    for ch in '.,!?':
+        cmd = cmd.replace(ch,' ')
+    cmd = cmd.strip().replace('  ', ' ').lower()
     if not cmd:
         output(prefix="I couldn't quite catch that. ", text='Please repeat.')
         continue
     logger.debug('input command: %s', cmd)
-    cmd_embedding = recognizer.embed(cmd)
-    cmd_key, best_cmd, diff = recognizer.find_closest_command(cmd_tree, cmd, cmd_embedding)
+    cmd_key, best_cmd, diff = recognizer.find_closest_command(cmd_tree, cmd)
     logger.debug('cmd=%s, diff=%f, key=%s', best_cmd, diff, cmd_key)
     if cmd_key and best_cmd and diff > 0.92:
         web_executor.run(actions, cmd_key)
