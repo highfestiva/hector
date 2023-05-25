@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def say(text, tmp_filename='speech.mp3'):
+    if not text:
+        return
     text2mp3(text, tmp_filename)
     play_mp3(tmp_filename)
 

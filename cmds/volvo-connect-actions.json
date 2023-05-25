@@ -1,11 +1,23 @@
 {
-  "start": {
+  "volvo_connect_start": {
     "login_url": "https://iot1.volvoconnect.com/login",
     "username": "input[id='username']:abc",
     "password": "input[id='password']:abc",
     "submit": "button[name='submit']"
   },
+  "start": {
+    "login_url": "http://127.0.0.1:5000/login",
+    "username": "input[id='username']:abc",
+    "password": "input[id='password']:abc",
+    "submit": "button[name='submit']"
+  },
   "position_history": {
-    "url": "/positionhistory"
+    "url": "/position-history-something"
+  },
+  "<command>": {
+    "url": "/<command>"
+  },
+  "map": {
+    "url": "https://www.bing.com/maps"
   }
 }

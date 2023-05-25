@@ -12,14 +12,17 @@ from brow import web_executor
 logger = logging.getLogger(__name__)
 
 
-def output(text, prefix=''):
-    logger.info(prefix+text)
-    # say(text, 'ai-output.mp3')
+def output(text, *args, **kwargs):
+    prefix = kwargs.get('prefix', '')
+    logger.info(' '.join([prefix+text]+[str(a) for a in args]))
+    if options.audio:
+        say(text, 'ai-output.mp3')
 
 
 parser = ArgumentParser()
 parser.add_argument('-v','--verbose', action='store_true')
 parser.add_argument('-d','--domain', help='The command domain to use, e.g. volvo-connect')
+parser.add_argument('-a','--audio', action='store_true', help='Use speech to control and listen through speakers')
 options = parser.parse_args()
 if options.domain:
     recognizer.cmd_filename = ('cmds/%s-cmds.json'%options.domain)
@@ -34,7 +37,7 @@ logger.debug('loading commands')
 cmd_tree = recognizer.load_cmd_tree()
 unembedded_cmds = recognizer.filter_unembedded_cmds(cmd_tree)
 if unembedded_cmds:
-    logger.debug('updating commands %s', unembedded_cmds)
+    logger.info('updating commands %s', unembedded_cmds)
     recognizer.update_embeddings(cmd_tree, unembedded_cmds)
     recognizer.save_cmd_tree(cmd_tree)
 
@@ -42,12 +45,13 @@ if unembedded_cmds:
 actions = web_executor.load_actions()
 web_executor.run(actions, 'start')
 output('How may I be of service?')
-i = 0
 while True:
-    # fn = 'human-input.wav'
-    # record_to_file(fn)
-    # cmd = transcribe_from_audio_file(fn)
-    cmd = input().strip()
+    if options.audio:
+        fn = 'human-input.wav'
+        record_to_file(fn)
+        cmd = transcribe_from_audio_file(fn)
+    else:
+        cmd = input().strip()
     if not cmd:
         output(prefix="I couldn't quite catch that. ", text='Please repeat.')
         continue
@@ -55,8 +59,8 @@ while True:
     cmd_embedding = recognizer.embed(cmd)
     cmd_key, best_cmd, diff = recognizer.find_closest_command(cmd_tree, cmd, cmd_embedding)
     logger.debug('cmd=%s, diff=%f, key=%s', best_cmd, diff, cmd_key)
-    if cmd_key and best_cmd and diff > 0.91:
-        output(prefix='running command: ', text=best_cmd)
+    if cmd_key and best_cmd and diff > 0.92:
         web_executor.run(actions, cmd_key)
+        output(prefix=f'running command ({int(diff*100)}% accuracy): ', text=best_cmd)
     else:
-        output(prefix='unknown command: ', text=cmd)
+        output('unknown command:', cmd, 'best guess:', best_cmd, 'diff:', diff)

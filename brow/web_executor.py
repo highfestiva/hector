@@ -17,7 +17,7 @@ def load_actions(filename=None):
 
 
 def run(actions, action):
-    exec_info = actions[action]
+    exec_info = actions.get(action) or actions['<command>']
     driver = actions['_driver']
     if 'login_url' in exec_info:
         _login(driver, exec_info, actions=actions, action_name=action)
@@ -45,5 +45,6 @@ def _open_url(driver, exec_info, actions, action_name):
     url = exec_info['url']
     if '://' not in url:
         url = actions.get('_base_url','') + url
+    url = url.replace('<command>', action_name)
     logger.debug('%s: loading %s', action_name, url)
     driver.get(url)
