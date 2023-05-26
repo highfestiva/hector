@@ -9,7 +9,7 @@ import re
 
 meta_filename = 'cmds/meta-cmds.json'
 cmd_filename = 'cmds/generic-cmds.json'
-max_phrase_words = 2
+max_phrase_words = 3
 
 logger = logging.getLogger(__name__)
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -58,14 +58,14 @@ def find_closest_command(cmd_tree, cmd):
     cmd = _strip_exact_meta(cmd_tree.meta['filter_words'].keys(), cmd)
     phrases = _str_to_phrases(cmd, nwords=max_phrase_words)
     key,phrase,diff = _phrase_exact_match(cmd_tree, phrases)
-    if diff > 0.97:
+    if diff > 0.97 and (len(phrases) == 1 or len(phrase.split()) >= 2):
         logger.debug('exact command match %s: %s (%i)', cmd, phrase, diff*100)
         return key, phrase, diff
 
     logger.debug('phrases remaining: %s', phrases)
     embeddings = _get_embeddings(phrases)
     flat = [{'cmd':c, 'diff':_cosine_similarity(e, embedding), 'key':k} for embedding in embeddings for k,cmds in cmd_tree.items() for c,e in cmds.items()]
-    closest = sorted(flat, key=lambda o: -o['diff'])
+    closest = sorted(flat, key=lambda o: -o['diff']-(len(o['cmd'].split())-1)*0.1)
     logger.debug('closest commands to %s: %s', cmd, closest[:3])
     return closest[0]['key'], closest[0]['cmd'], closest[0]['diff']
 

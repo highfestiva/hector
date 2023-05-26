@@ -23,6 +23,8 @@ def run(actions, action):
         _login(driver, exec_info, actions=actions, action_name=action)
     elif 'url' in exec_info:
         _open_url(driver, exec_info, actions=actions, action_name=action)
+    elif 'click' in exec_info:
+        _click(driver, exec_info, actions=actions, action_name=action)
     else:
         assert False, f'command config of {action} erroneous'
 
@@ -48,3 +50,12 @@ def _open_url(driver, exec_info, actions, action_name):
     url = url.replace('<command>', action_name)
     logger.debug('%s: loading %s', action_name, url)
     driver.get(url)
+
+
+def _click(driver, exec_info, actions, action_name):
+    sel = exec_info['click']
+    logger.debug('%s: clicking %s', action_name, sel)
+    try:
+        driver.find_element(By.CSS_SELECTOR, sel).click()
+    except Exception as ex:
+        logger.error('unable to click selector', ex)

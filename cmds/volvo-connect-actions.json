@@ -1,23 +1,68 @@
 {
-  "volvo_connect_start": {
+  "start": {
     "login_url": "https://iot1.volvoconnect.com/login",
-    "username": "input[id='username']:abc",
-    "password": "input[id='password']:abc",
+    "username": "input[id='username']:a369815",
+    "password": "input[id='password']:Password11",
     "submit": "button[name='submit']"
   },
-  "start": {
+  "_dev_start": {
     "login_url": "http://127.0.0.1:5000/login",
     "username": "input[id='username']:abc",
     "password": "input[id='password']:abc",
     "submit": "button[name='submit']"
   },
-  "position_history": {
-    "url": "/position-history-something"
-  },
-  "<command>": {
-    "url": "/<command>"
-  },
   "map": {
-    "url": "https://www.bing.com/maps"
+    "url": "/positioning"
+  },
+  "vehicles": {
+    "url": "/positioning/vehicle"
+  },
+  "drivers": {
+    "url": "/positioning/driver"
+  },
+  "routes": {
+    "url": "/positioning/route"
+  },
+  "units": {
+    "url": "/positioning/unit"
+  },
+  "fuel_report": {
+    "url": "/report/fuelEfficiency/overview"
+  },
+  "performance_report": {
+    "url": "/report/performance/data"
+  },
+  "fuel_adblue_report": {
+    "url": "/report/fueladblue/data"
+  },
+  "environment_report": {
+    "url": "/report/environmental/data"
+  },
+  "tracking_report": {
+    "url": "/report/trackingReportMultipleVehicles/event"
+  },
+  "admin": {
+    "url": "/admin"
+  },
+  "vehicle_admin": {
+    "url": "/admin/vehicles"
+  },
+  "driver_admin": {
+    "url": "/admin/drivers/overview"
+  },
+  "expand_first_block": {
+    "click": "div[data-testid='kb-body-inner'] > div:nth-of-type(1)[data-test-asset-group-expanded='collapsed']"
+  },
+  "expand_second_block": {
+    "click": "div[data-testid='kb-body-inner'] > div:nth-of-type(2)[data-test-asset-group-expanded='collapsed']"
+  },
+  "select_first_item": {
+    "click": "div > div:nth-of-type(1)[data-test-asset-row-expanded='collapsed']"
+  },
+  "select_second_item": {
+    "click": "div > div:nth-of-type(2)[data-test-asset-row-expanded='collapsed']"
+  },
+  "select_third_item": {
+    "click": "div > div:nth-of-type(3)[data-test-asset-row-expanded='collapsed']"
   }
 }
