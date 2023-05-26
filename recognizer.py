@@ -17,7 +17,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 if not openai.api_key:
     logger.error('you need to a) create an OpenAI account, b) create API keys, and c) set the OPENAI_API_KEY system variable')
-    os.exit(1)
+    os._exit(1)
 
 
 class rdict(dict):
